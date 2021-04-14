@@ -18,5 +18,6 @@ COPY . .
 #expose port 5000
 EXPOSE 5000
 
+
 #run gunicorn
 CMD ["gunicorn", "-w", "4", "--bind", "0.0.0.0:5000", "app:create_app()"]
