@@ -1,0 +1,131 @@
+version: "3.8"
+
+networks:
+  gateway-net:
+    name: gateway-net
+    driver: bridge
+
+services:
+
+  gateway:
+    image: andrequeiroz2/api-gateway:latest
+    networks:
+      - gateway-net
+    ports:
+      - 5000:5000
+
+  nginx:
+    build: nginx
+    container_name: nginx_app
+    restart: always
+    networks:
+      - gateway-net
+    ports:
+      - "80:80"
+
+  auth:
+    image: andrequeiroz2/api-auth:latest
+    networks:
+      - gateway-net
+    ports:
+      - 6000:6000
+ 
+  tags:
+    image: andrequeiroz2/api-tags:latest
+    networks:
+      - gateway-net
+    ports:
+      - 7000:7000
+    links:
+      - mongodb_tags
+    depends_on: 
+      - mongodb_tags
+  
+  tasks:
+    image: andrequeiroz2/api-tasks:latest
+    networks:
+      - gateway-net
+    ports:
+      - 1000:1000
+    links:
+      - mongodb_tasks
+    depends_on: 
+      - mongodb_tasks
+  
+  mongodb_tags:
+    image: mongo:latest
+    container_name: mongodb_tags
+    hostname: mongodbtags
+    restart: on-failure
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=passwordD21
+      - MONGO_INITDB_DATABASE=tags
+    ports:
+      - 27017:27017
+    volumes:
+     - mongo_data_tags:/data/db/tags
+    networks:
+      - gateway-net
+
+  mongodb_tasks:
+    image: mongo:latest
+    container_name: mongodb_tasks
+    hostname: mongodbtasks
+    restart: on-failure
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=passwordD21
+      - MONGO_INITDB_DATABASE=tasks
+    ports:
+      - 28017:27017
+    volumes:
+     - mongo_data_tasks:/data/db/tasks
+    networks:
+      - gateway-net
+
+  mongo-express-tags:
+    image: mongo-express
+    container_name: mongo-express-tags
+    ports:
+      - 8081:8081
+    environment:
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=passwordD21
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=passwordD21
+      - ME_CONFIG_MONGODB_SERVER=mongodb_tags
+    links:
+      - mongodb_tags
+    networks:
+      - gateway-net
+    depends_on:
+      - mongodb_tags
+  
+  mongo-express-tasks:
+    image: mongo-express
+    container_name: mongo-express-tasks
+    ports:
+      - 8082:8081
+    environment:
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=passwordD21
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=passwordD21
+      - ME_CONFIG_MONGODB_SERVER=mongodb_tasks
+    links:
+      - mongodb_tasks
+    networks:
+      - gateway-net
+    depends_on: 
+      - mongodb_tasks
+
+volumes:
+  mongo_data_tags:
+    name: mongo_data_tags
+    external: true
+  mongo_data_tasks:
+    name: mongo_data_tasks
+    external: true
