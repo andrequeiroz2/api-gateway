@@ -52,6 +52,16 @@ services:
     depends_on: 
       - mongodb_tasks
   
+  join:
+    image: andrequeiroz2/api-join:latest
+    networks:
+      - gateway-net
+    ports:
+      - 7900:7900
+    depends_on: 
+      - mongodb_tags
+      - mongodb_tasks
+
   mongodb_tags:
     image: mongo:latest
     container_name: mongodb_tags
